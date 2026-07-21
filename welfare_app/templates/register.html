@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkshayaAssist - Register</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+        .register-card {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 480px;
+            padding: 35px;
+        }
+        .brand-title {
+            color: #1e3c72;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+        /* Django Form Styling */
+        .register-card input[type="text"],
+        .register-card input[type="password"] {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .register-card input[type="text"]:focus,
+        .register-card input[type="password"]:focus {
+            border-color: #2a5298;
+            box-shadow: 0 0 5px rgba(42, 82, 152, 0.4);
+        }
+        .helptext, .helptext ul {
+            font-size: 0.78rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+            padding-left: 15px;
+        }
+        .btn-custom {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .btn-custom:hover {
+            background: #2a5298;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-card">
+    <h2 class="brand-title">AkshayaAssist</h2>
+    <p class="subtitle">Create your account to get started</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-custom mt-2">Sign Up</button>
+    </form>
+</div>
+
+</body>
+</html>

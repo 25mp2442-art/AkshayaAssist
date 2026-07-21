@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkshayaAssist - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            padding: 35px;
+        }
+        .brand-title { color: #1e3c72; font-weight: 700; text-align: center; }
+        .subtitle { text-align: center; color: #6c757d; font-size: 0.9rem; margin-bottom: 20px; }
+        .login-card input[type="text"], .login-card input[type="password"] {
+            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 8px; margin-bottom: 15px; outline: none;
+        }
+        .btn-custom { background: #1e3c72; color: white; border: none; border-radius: 8px; padding: 10px; font-weight: 600; width: 100%; }
+        .btn-custom:hover { background: #2a5298; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h2 class="brand-title">AkshayaAssist</h2>
+    <p class="subtitle">Login to your account</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success p-2 small text-center">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-custom mt-2">Login</button>
+    </form>
+    <p class="text-center mt-3 small">Don't have an account? <a href="{% url 'register' %}">Sign Up</a></p>
+</div>
+
+</body>
+</html>
