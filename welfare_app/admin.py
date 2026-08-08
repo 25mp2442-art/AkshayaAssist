@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import UserProfile
 
-# Register your models here.
+admin.site.register(UserProfile)
+
+from .models import Scheme
+
+admin.site.register(Scheme)
