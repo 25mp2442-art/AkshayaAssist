@@ -33,4 +33,20 @@ class Scheme(models.Model):
     benefits = models.TextField(help_text="What benefits the user gets")
 
     def __str__(self):
-        return self.title    
+        return self.title
+
+class Application(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending Review'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    scheme = models.ForeignKey(Scheme, on_delete=models.CASCADE)
+    applied_date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    remarks = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.scheme.title}"
+        

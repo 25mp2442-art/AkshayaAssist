@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Applications | AkshayaAssist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">AkshayaAssist</a>
+            <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm rounded-pill">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h4 class="fw-bold mb-4">My Submitted Applications 📄</h4>
+
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Scheme Title</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td class="fw-bold">{{ app.scheme.title }}</td>
+                        <td class="text-muted small">{{ app.applied_date|date:"d M Y, h:i A" }}</td>
+                        <td>
+                            {% if app.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
+                            {% elif app.status == 'Approved' %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill">Approved</span>
+                            {% else %}
+                                <span class="badge bg-danger px-3 py-2 rounded-pill">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ app.remarks|default:"Under verification" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">You haven't applied for any schemes yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
