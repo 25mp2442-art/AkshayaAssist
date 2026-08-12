@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submit Documents | {{ scheme.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5" style="max-width: 650px;">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
+            <h5 class="mb-0 fw-bold">Akshaya Assist - Document Submission</h5>
+            <small>{{ scheme.title }}</small>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Applicant Name</label>
+                    <input type="text" class="form-control bg-light" value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Contact Phone Number</label>
+                    <input type="tel" name="phone_number" class="form-control" placeholder="Enter 10-digit Mobile Number" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Upload Identity & Required Proofs (Single PDF/Image)</label>
+                    <input type="file" name="document" class="form-control" accept=".pdf, .jpg, .png" required>
+                    <small class="text-muted">Combine Aadhaar, Income certificate or relevant documents into one file.</small>
+                </div>
+
+                <div class="alert alert-info small mt-3">
+                    ℹ️ <strong>Note:</strong> Once submitted, the Akshaya Staff will verify your uploaded documents, complete the government form on your behalf, and update the status here.
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-success btn-lg rounded-3 fw-bold">Submit to Akshaya Desk</button>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

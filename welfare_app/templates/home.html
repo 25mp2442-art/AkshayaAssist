@@ -10,7 +10,7 @@
     <!-- Top Navbar -->
     <nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AkshayaAssist</a>
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">AkshayaAssist</a>
             <div class="text-white">
                 <span class="me-3">Welcome, <strong>{{ request.user.username }}</strong></span>
                 <a href="{% url 'my_applications' %}" class="btn btn-outline-light btn-sm rounded-pill me-2">My Applications</a>
@@ -41,7 +41,9 @@
                     <div class="d-flex gap-3 text-muted small mt-2">
                         <span><strong>Income:</strong> ₹{{ profile.annual_income }}</span> |
                         <span><strong>Card:</strong> {{ profile.ration_card_type }}</span> |
-                        <span><strong>Category:</strong> {{ profile.category }}</span>
+                        <span><strong>Category:</strong> {{ profile.category }}</span> |
+                        <span><strong>Gender:</strong> {{ profile.gender }}</span> |
+                        <span><strong>Occupation:</strong> {{ profile.occupation }}</span>
                     </div>
                 </div>
                 <a href="{% url 'profile_setup' %}" class="btn btn-outline-primary btn-sm rounded-pill">Edit Profile</a>
@@ -52,7 +54,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold text-dark mb-0">Recommended Government Schemes ⭐</h4>
             <div class="w-50">
-                <input type="text" id="schemeSearchInput" class="form-control rounded-pill px-3" placeholder="🔍 Search scheme name or benefits...">
+                <input type="text" id="schemeSearchInput" class="form-control rounded-pill px-3" placeholder="🔍 Search scheme name or description...">
             </div>
         </div>        
 
@@ -65,22 +67,19 @@
                         <span class="badge bg-success mb-2 w-auto align-self-start">Eligible</span>
                         <h5 class="card-title fw-bold">{{ scheme.title }}</h5>
                         <p class="card-text text-muted small flex-grow-1">{{ scheme.description|truncatewords:15 }}</p>
-                        <div class="bg-light p-2 rounded-3 mb-3 small">
-                            <strong>Benefits:</strong> {{ scheme.benefits|truncatewords:8 }}
-                        </div>
 
                         <!-- Applied Check Condition -->
                         {% if scheme.is_applied %}
-                            <button class="btn btn-success w-100 rounded-3 fw-bold mt-auto" disabled>✓ Applied</button>
+                            <button class="btn btn-secondary w-100 rounded-3 fw-bold mt-auto" disabled>✓ Already Applied</button>
                         {% else %}
-                            <a href="{% url 'apply_scheme' scheme.id %}" class="btn btn-primary w-100 rounded-3 fw-bold mt-auto">Apply via Akshaya</a>
+                            <a href="{% url 'apply_scheme' scheme.id %}" class="btn btn-primary w-100 rounded-3 fw-bold mt-auto">📝 Apply via Akshaya</a>
                         {% endif %}
                     </div>
                 </div>
             </div>
             {% empty %}
             <div class="col-12 text-center py-5">
-                <p class="text-muted">No specific schemes match your current profile criteria.</p>
+                <p class="text-muted fs-5">No specific schemes match your current profile criteria.</p>
             </div>
             {% endfor %}
         </div>
@@ -89,19 +88,22 @@
 
     <!-- Real-time Search Script -->
     <script>
-        document.getElementById('schemeSearchInput').addEventListener('keyup', function() {
-            let filter = this.value.toLowerCase();
-            let cards = document.querySelectorAll('.scheme-card');
+        const searchInput = document.getElementById('schemeSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                let filter = this.value.toLowerCase();
+                let cards = document.querySelectorAll('.scheme-card');
 
-            cards.forEach(function(card) {
-                let text = card.textContent.toLowerCase();
-                if (text.includes(filter)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
+                cards.forEach(function(card) {
+                    let text = card.textContent.toLowerCase();
+                    if (text.includes(filter)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
             });
-        });
+        }
     </script>
 </body>
 </html>
