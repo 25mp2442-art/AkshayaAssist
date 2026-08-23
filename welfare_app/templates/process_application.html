@@ -3,176 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Process & Complete Application - Akshaya Assist</title>
+    <title>Process Application #{{ app.token_number }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-    /* 1. Page Background & Font */
-    body {
-        background-color: #f4f6f9;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #333333;
-    }
-
-    /* 2. Interactive Cards (Hover & Lift Effect) */
-    .card {
-        border: none !important;
-        border-radius: 14px !important;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        background: #ffffff;
-    }
-
-    .card:hover {
-        transform: translateY(-4px); /* Hover ചെയ്യുമ്പോൾ കാർഡ് ചെറുതായി ഉയരും */
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    /* 3. Headers & Navbar Customization */
-    .navbar {
-        background: linear-gradient(135deg, #1e3c72, #2a5298) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .card-header {
-        background: linear-gradient(135deg, #1e3c72, #2a5298) !important;
-        color: #ffffff !important;
-        border-top-left-radius: 14px !important;
-        border-top-right-radius: 14px !important;
-        font-weight: 600;
-        padding: 1rem 1.25rem;
-    }
-
-    /* 4. Smooth Buttons with Subtle Hover */
-    .btn {
-        border-radius: 8px !important;
-        font-weight: 500;
-        transition: all 0.2s ease-in-out !important;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px); /* ബട്ടണുകളിൽ മൗസ് വെക്കുമ്പോൾ Hover effect */
-    }
-
-    .btn-primary {
-        background-color: #2a5298 !important;
-        border-color: #2a5298 !important;
-    }
-
-    .btn-primary:hover {
-        background-color: #1e3c72 !important;
-    }
-
-    /* 5. Inputs & Forms (Glow effect on focus) */
-    .form-control, .form-select {
-        border-radius: 8px !important;
-        border: 1px solid #ced4da;
-        padding: 0.6rem 0.9rem;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .form-control:focus, .form-select:focus {
-        border-color: #2a5298 !important;
-        box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.15) !important;
-    }
-
-    /* 6. Tables - Hover Effects (For Dashboards) */
-    .table {
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .table thead th {
-        background-color: #e9ecef;
-        color: #495057;
-        font-weight: 600;
-        border-bottom: none;
-    }
-
-    .table-hover tbody tr {
-        transition: background-color 0.2s ease;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: rgba(42, 82, 152, 0.05) !important; /* Row-ലൂടെ മൗസ് പോകുമ്പോൾ Soft Highlight */
-    }
-
-    /* 7. Badges */
-    .badge {
-        padding: 0.45em 0.75em;
-        font-weight: 600;
-        border-radius: 6px;
-    }
-</style>
 </head>
 <body class="bg-light">
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-9">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-primary text-white p-3 rounded-top-4">
-                    <h4 class="mb-0">Process Application #{{ app.id }}</h4>
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Process Application #{{ app.token_number }}</h2>
+        <a href="{% url 'staff_dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <div class="row">
+        <!-- 📌 Applicant Details & Submitted Data -->
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Applicant Details & Submitted Data</h5>
                 </div>
                 <div class="card-body p-4">
-                    
-                    <!-- Form Starts Here -->
+                    <p><strong>Applicant Username:</strong> {{ app.user.username }}</p>
+                    <p><strong>Scheme Name:</strong> {{ app.scheme.title }}</p>
+                    <p><strong>Phone Number:</strong> {{ app.phone_number }}</p>
+                    <p><strong>Applied Date:</strong> {{ app.applied_date|date:"d M Y, h:i A" }}</p>
+
+                    <hr>
+                    <h6 class="fw-bold text-primary">Dynamic Form Details Submitted:</h6>
+                    {% if app.form_data %}
+                        <table class="table table-bordered mt-2">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Submitted Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, value in app.form_data.items %}
+                                    <tr>
+                                        <td><strong>{{ key }}</strong></td>
+                                        <td>{{ value }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-muted">No extra field data submitted.</p>
+                    {% endif %}
+
+                    <hr>
+                    <h6 class="fw-bold text-primary">Uploaded Document:</h6>
+                    {% if app.document %}
+                        <a href="{{ app.document.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            📄 View Uploaded Document
+                        </a>
+                    {% else %}
+                        <span class="text-danger">No document uploaded</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚙️ Staff Status Update Form -->
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Update Application Status</h5>
+                </div>
+                <div class="card-body p-4">
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
-
-                        <!-- SECTION 1: Akshaya Staff Filling Details -->
-                        <h5 class="text-primary border-bottom pb-2 mb-3">1. Application & Applicant Details</h5>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Full Name of Applicant</label>
-                                <input type="text" name="applicant_name" class="form-control" value="{{ app.applicant_name|default:'' }}" required placeholder="Enter applicant name">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Aadhaar / ID Number</label>
-                                <input type="text" name="id_number" class="form-control" value="{{ app.id_number|default:'' }}" required placeholder="Enter Aadhaar or ID No.">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Annual Income (₹)</label>
-                                <input type="number" name="income" class="form-control" value="{{ app.income|default:'' }}" placeholder="Enter annual income">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Upload Supporting Document (Optional)</label>
-                                <input type="file" name="document" class="form-control">
-                                {% if app.document %}
-                                    <small class="text-muted">Current file: <a href="{{ app.document.url }}" target="_blank">View Document</a></small>
-                                {% endif %}
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Application Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Submitted" {% if app.status == 'Submitted' %}selected{% endif %}>Submitted to Akshaya</option>
+                                <option value="Under Verification" {% if app.status == 'Under Verification' %}selected{% endif %}>Under Verification</option>
+                                <option value="Forwarded to Govt" {% if app.status == 'Forwarded to Govt' %}selected{% endif %}>Forwarded to Govt Dept</option>
+                                <option value="Approved" {% if app.status == 'Approved' %}selected{% endif %}>Approved</option>
+                                <option value="Rejected" {% if app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
                         </div>
 
-                        <!-- SECTION 2: Staff Processing & Status -->
-                        <h5 class="text-primary border-bottom pb-2 mt-4 mb-3">2. Processing Action</h5>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="status" class="form-label fw-bold">Application Status</label>
-                                <select name="status" id="status" class="form-select" required>
-                                    <option value="Pending" {% if app.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                    <option value="Approved" {% if app.status == 'Approved' %}selected{% endif %}>Approved / Completed</option>
-                                    <option value="Rejected" {% if app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-12">
-                                <label for="remarks" class="form-label fw-bold">Remarks / Internal Notes</label>
-                                <textarea name="remarks" id="remarks" class="form-control" rows="3" placeholder="Add any details, instructions or reason for rejection...">{{ app.remarks|default:'' }}</textarea>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Staff Remarks / Notes</label>
+                            <textarea name="remarks" class="form-control" rows="4" placeholder="Enter remarks for the applicant">{{ app.staff_remarks|default:'' }}</textarea>
                         </div>
 
-                        <!-- Submit Buttons -->
-                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
-                            <a href="{% url 'staff_dashboard' %}" class="btn btn-outline-secondary px-4 rounded-pill">Back to Dashboard</a>
-                            <button type="submit" class="btn btn-success px-5 rounded-pill">Save & Update Application</button>
-                        </div>
+                        <button type="submit" class="btn btn-success w-100 btn-lg">Update Application</button>
                     </form>
-
                 </div>
             </div>
         </div>

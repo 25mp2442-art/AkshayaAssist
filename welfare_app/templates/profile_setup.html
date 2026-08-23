@@ -169,7 +169,46 @@
                             <label class="form-label fw-bold">Occupation</label>
                             <input type="text" name="occupation" class="form-control" value="{{ profile.occupation|default:'' }}" placeholder="Enter your occupation" required>
                         </div>
+                       <!-- 💍 Marital Status Field -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Marital Status (വൈവാഹിക നില)</label>
+                            <select name="marital_status" class="form-select" required>
+                                <option value="">-- Select --</option>
+                                <option value="Single" {% if profile.marital_status == 'Single' %}selected{% endif %}>Single (വിവാഹിതനല്ല/യല്ല)</option>
+                                <option value="Married" {% if profile.marital_status == 'Married' %}selected{% endif %}>Married (വിവാഹിതൻ/ത)</option>
+                                <option value="Divorced" {% if profile.marital_status == 'Divorced' %}selected{% endif %}>Divorced (ബന്ധം വേർപെടുത്തിയത്)</option>
+                                <option value="Widow" {% if profile.marital_status == 'Widow' %}selected{% endif %}>Widow/Widower (വിധവ/വിധവൻ)</option>
+                            </select>
+                        </div>
 
+                         <!-- ♿ Differently Abled Select Field -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Are you Differently Abled? (ഭിന്നശേഷിയുള്ള ആളാണോ?)</label>
+                            <select name="is_differently_abled" id="disabilitySelect" class="form-select" required>
+                                <option value="False" {% if not profile.is_differently_abled %}selected{% endif %}>No (അല്ല)</option>
+                                <option value="True" {% if profile.is_differently_abled %}selected{% endif %}>Yes (ആണ്)</option>
+                            </select>
+                        </div>
+
+                        <!-- ♿ Dynamic Disability Fields (Yes അടിച്ചാൽ മാത്രം കാണുന്നത്) -->
+                        <div id="disabilityDetails" style="display: none;" class="p-3 mb-3 bg-light rounded border">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary">Disability Category / Type</label>
+                            <select name="disability_type" class="form-select">
+                                <option value="">Select Type</option>
+                                <option value="Visual Impairment" {% if profile.disability_type == 'Visual Impairment' %}selected{% endif %}>Visual Impairment</option>
+                                <option value="Hearing Impairment" {% if profile.disability_type == 'Hearing Impairment' %}selected{% endif %}>Hearing Impairment</option>
+                                <option value="Locomotor Disability" {% if profile.disability_type == 'Locomotor Disability' %}selected{% endif %}>Locomotor Disability</option>
+                                <option value="Other" {% if profile.disability_type == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary">Disability Percentage (%)</label>
+                            <input type="number" name="disability_percentage" class="form-control" value="{{ profile.disability_percentage|default:'' }}" placeholder="e.g. 40">
+                        </div>
+                    </div>
+                    </div>
                         <!-- Submit Button -->
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success">Save Profile & Continue</button>
@@ -185,3 +224,22 @@
 
 </body>
 </html>
+
+<!-- 📜 Toggle ചെയ്യാനുള്ള JavaScript (ഫയലിന്റെ ഏറ്റവും താഴെ ചേർക്കുക) -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var selectElement = document.getElementById("disabilitySelect");
+        var detailsDiv = document.getElementById("disabilityDetails");
+
+        function toggleFields() {
+            if (selectElement.value === "True") {
+                detailsDiv.style.display = "block";
+            } else {
+                detailsDiv.style.display = "none";
+            }
+        }
+
+        toggleFields();
+        selectElement.addEventListener("change", toggleFields);
+    });
+</script>
