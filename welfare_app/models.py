@@ -1,4 +1,5 @@
 import uuid
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -24,7 +25,7 @@ class UserProfile(models.Model):
     MARITAL_CHOICES = [
         ('Single', 'Single (Unmarried)'),
         ('Married', 'Married'),
-        ('Divorced', 'Divorced '),
+        ('Divorced', 'Divorced'),
         ('Widow', 'Widow/Widower'),
     ]
 
@@ -36,7 +37,8 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
     occupation = models.CharField(max_length=100, null=True, blank=True)
     marital_status = models.CharField(max_length=20, choices=MARITAL_CHOICES, null=True, blank=True)
-    # ♿ Disability Details
+    
+    # Disability Details
     is_differently_abled = models.BooleanField(default=False)
     disability_type = models.CharField(max_length=100, null=True, blank=True)
     disability_percentage = models.IntegerField(null=True, blank=True)
@@ -91,7 +93,7 @@ class Scheme(models.Model):
     allowed_gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='ALL')
     required_occupation = models.CharField(max_length=50, choices=OCCUPATION_CHOICES, default='ALL')
     allowed_marital_status = models.CharField(max_length=20, choices=MARITAL_CHOICES, default='ALL')
-    # ♿ ഭിന്നശേഷി സ്കീം ഫീൽഡുകൾ
+    
     is_for_disabled_only = models.BooleanField(default=False)
 
     required_documents = models.CharField(
@@ -112,30 +114,52 @@ class Scheme(models.Model):
 
 
 class Application(models.Model):
+    # പുതിയ ഫ്ലോയ്ക്കുള്ള സ്റ്റാറ്റസുകൾ
     STATUS_CHOICES = [
-        ('Submitted', 'Submitted to Akshaya'),
-        ('Under Verification', 'Under Verification'),
-        ('Forwarded to Govt', 'Forwarded to Govt Dept'),
-        ('Approved', 'Approved'),
-        ('Rejected', 'Rejected'),
+        ('PENDING_VERIFICATION', 'Pending Document Verification'),
+        ('REJECTED_DOCS', 'Documents Rejected (Re-upload Needed)'),
+        ('DOCS_APPROVED', 'Documents Approved (Eligible for Token)'),
+        ('TOKEN_BOOKED', 'Token Booked / Waiting in Queue'),
+        ('IN_PROGRESS', 'Processing at Counter'),
+        ('FORWARDED_TO_GOVT', 'Submitted to Govt Portal'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     scheme = models.ForeignKey(Scheme, on_delete=models.CASCADE)
-    token_number = models.CharField(max_length=20, unique=True, editable=False, null=True, blank=True)
-    applied_date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Submitted')
     
+    # ട്രാക്കിംഗ് ഐഡി (റെഫറൻസ് നമ്പർ)
+    application_id = models.CharField(max_length=20, unique=True, editable=False, null=True, blank=True)
+    
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='PENDING_VERIFICATION')
+    rejection_reason = models.TextField(blank=True, null=True)
+    
+    # യൂസർ തിരഞ്ഞെടുക്കുന്ന അപ്പോയിന്റ്മെന്റ് ഡേറ്റും ടോക്കൺ നമ്പറും
+    appointment_date = models.DateField(null=True, blank=True)
+    token_number = models.IntegerField(null=True, blank=True)
+
     phone_number = models.CharField(max_length=15, default="")
-    document = models.FileField(upload_to='application_docs/', null=True, blank=True)
-    
     form_data = models.JSONField(default=dict, blank=True)
-    staff_remarks = models.TextField(blank=True, default="Documents submitted. Awaiting verification.")
+    
+    # അക്ഷയ സ്റ്റാഫിന്റെ വിവരങ്ങളും ഗവൺമെന്റ് പോർട്ടൽ റഫറൻസും
+    govt_ref_number = models.CharField(max_length=100, blank=True, null=True)
+    staff_remarks = models.TextField(blank=True, default="Application submitted. Awaiting verification.")
+    
+    applied_date = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        if not self.token_number:
-            self.token_number = f"AKS-{uuid.uuid4().hex[:6].upper()}"
+        if not self.application_id:
+            self.application_id = f"AKS-{uuid.uuid4().hex[:6].upper()}"
         super().save(*args, **kwargs)
 
     def __str__(self): 
-        return f"{self.token_number} - {self.user.username}"
+        return f"{self.application_id} - {self.user.username} ({self.status})"
+
+
+class ApplicationDocument(models.Model):
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='documents')
+    document_name = models.CharField(max_length=255)
+    file = models.FileField(upload_to='scheme_documents/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.document_name} - {self.application.id}"

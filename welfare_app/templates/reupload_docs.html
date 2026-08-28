@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <h4 class="fw-bold text-danger mb-2">Re-upload Documents</h4>
+            <div class="alert alert-warning">
+                <strong>Reason for Rejection:</strong> {{ app.rejection_reason }}
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Upload Correct Documents</label>
+                    <input type="file" name="documents" class="form-control" multiple required>
+                </div>
+                <button type="submit" class="btn btn-danger w-100 rounded-3">Submit Again</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

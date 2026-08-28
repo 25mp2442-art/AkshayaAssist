@@ -1,11 +1,13 @@
+import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.db.models import Max
 
 from .forms import UserProfileForm
-from .models import UserProfile, Scheme, Application
+from .models import UserProfile, Scheme, Application, ApplicationDocument
 
 
 def is_staff_user(user):
@@ -59,11 +61,8 @@ def profile_setup(request):
         profile.category = request.POST.get('category')
         profile.gender = request.POST.get('gender')
         profile.occupation = request.POST.get('occupation')
-        
-        # 💍 1. Marital Status Save ചെയ്യുന്നു
         profile.marital_status = request.POST.get('marital_status')
         
-        # ♿ Disability Data Saving
         is_disabled = request.POST.get('is_differently_abled') == 'True'
         profile.is_differently_abled = is_disabled
         if is_disabled:
@@ -107,7 +106,7 @@ def home(request):
         user_cat = (profile.category or "").strip()
         user_gender = (profile.gender or "").strip()
         user_occ = (profile.occupation or "").strip()
-        user_marital = (profile.marital_status or "").strip() # 💍 Marital Status എടുക്കുന്നു
+        user_marital = (profile.marital_status or "").strip()
         user_age = profile.age or 0
 
         for scheme in all_schemes:
@@ -117,16 +116,12 @@ def home(request):
             category_ok = (scheme.category == 'ALL') or (scheme.category == user_cat)
             gender_ok = (scheme.allowed_gender == 'ALL') or (scheme.allowed_gender == user_gender)
             occupation_ok = (scheme.required_occupation == 'ALL') or (scheme.required_occupation == user_occ)
-            
-            # 💍 2. Marital Status ഫിൽട്ടറിംഗ് നിബന്ധന
             marital_ok = (scheme.allowed_marital_status == 'ALL') or (scheme.allowed_marital_status == user_marital)
             
-            # ♿ 3. ഭിന്നശേഷി സ്കീം ചെക്കിംഗ്
             disabled_ok = True
             if scheme.is_for_disabled_only:
                 disabled_ok = profile.is_differently_abled
 
-            # 💍 marital_ok കൂടി ഇവിടെ നിർബന്ധമാക്കുന്നു
             if income_ok and age_ok and ration_ok and category_ok and gender_ok and occupation_ok and disabled_ok and marital_ok:
                 scheme.is_applied = scheme.id in applied_scheme_ids
                 eligible_schemes.append(scheme)
@@ -139,6 +134,7 @@ def home(request):
     return render(request, 'home.html', context)
 
 
+# 1. അപേക്ഷ സമർപ്പിക്കുന്നു (സ്റ്റാറ്റസ്: PENDING_VERIFICATION)
 @login_required(login_url='login')
 def apply_scheme(request, scheme_id):
     scheme = get_object_or_404(Scheme, id=scheme_id)
@@ -151,9 +147,7 @@ def apply_scheme(request, scheme_id):
 
     if request.method == 'POST':
         phone = request.POST.get('phone_number')
-        doc = request.FILES.get('document')
 
-        # 📝 extra_fields dynamic values (JSON ആയി സേവ് ചെയ്യുന്നു)
         extra_data = {}
         if scheme.extra_fields:
             fields_list = [f.strip() for f in scheme.extra_fields.split(',') if f.strip()]
@@ -164,14 +158,22 @@ def apply_scheme(request, scheme_id):
             user=request.user,
             scheme=scheme,
             phone_number=phone,
-            document=doc,
-            form_data=extra_data
+            form_data=extra_data,
+            status='PENDING_VERIFICATION'
         )
-        messages.success(request, f"Application submitted! Your Token Number is {app.token_number}")
+
+        files = request.FILES.getlist('documents')
+        for uploaded_file in files:
+            ApplicationDocument.objects.create(
+                application=app,
+                document_name=uploaded_file.name,
+                file=uploaded_file
+            )
+
+        messages.success(request, f"Application submitted! Application Ref ID: {app.application_id}")
         return redirect('my_applications')
 
-    # required_documents split ചെയ്ത് ലിസ്റ്റ് ആക്കുന്നു
-    required_docs_list = [d.strip() for d in scheme.required_documents.split(',') if d.strip()]
+    required_docs_list = [d.strip() for d in scheme.required_documents.split(',') if d.strip()] if scheme.required_documents else []
     extra_fields_list = [f.strip() for f in scheme.extra_fields.split(',') if f.strip()] if scheme.extra_fields else []
 
     context = {
@@ -183,12 +185,92 @@ def apply_scheme(request, scheme_id):
     return render(request, 'apply_scheme.html', context)
 
 
+# 2. യൂസറുടെ ആപ്ലിക്കേഷൻ ലിസ്റ്റ്
 @login_required(login_url='login')
 def my_applications(request):
     applications = Application.objects.filter(user=request.user).order_by('-applied_date')
     return render(request, 'my_applications.html', {'applications': applications})
 
 
+# 3. റിജക്ട് ആയ ഡോക്യുമെന്റുകൾ യൂസറിന് വീണ്ടും അപ്‌ലോഡ് ചെയ്യാൻ
+@login_required(login_url='login')
+def reupload_docs(request, app_id):
+    app = get_object_or_404(Application, id=app_id, user=request.user)
+
+    if request.method == 'POST':
+        files = request.FILES.getlist('documents')
+        if files:
+            # പഴയ ഫയലുകൾ നീക്കം ചെയ്തിട്ട് പുതിയത് നൽകാം
+            app.documents.all().delete()
+            for uploaded_file in files:
+                ApplicationDocument.objects.create(
+                    application=app,
+                    document_name=uploaded_file.name,
+                    file=uploaded_file
+                )
+            app.status = 'PENDING_VERIFICATION'
+            app.staff_remarks = "Re-uploaded documents submitted. Awaiting verification."
+            app.save()
+            messages.success(request, "Documents re-uploaded successfully!")
+            return redirect('my_applications')
+
+    return render(request, 'reupload_docs.html', {'app': app})
+
+
+# 4. അപ്രൂവ് ആയ അപേക്ഷകൾക്ക് യൂസർ ടോക്കൺ ബുക്ക് ചെയ്യുന്നു
+@login_required(login_url='login')
+def book_token(request, app_id):
+    app = get_object_or_404(Application, id=app_id, user=request.user)
+
+    if app.status != 'DOCS_APPROVED':
+        messages.error(request, "Token booking is only allowed after document approval.")
+        return redirect('my_applications')
+
+    if request.method == 'POST':
+        selected_date = request.POST.get('appointment_date')
+        
+        # ടോക്കൺ നമ്പർ അനുയോജ്യമായി കണ്ടുപിടിക്കുന്നു
+        last_token = Application.objects.filter(appointment_date=selected_date).aggregate(Max('token_number'))['token_number__max']
+        new_token = (last_token or 0) + 1
+
+        app.appointment_date = selected_date
+        app.token_number = new_token
+        app.status = 'TOKEN_BOOKED'
+        app.save()
+
+        messages.success(request, f"Token #{new_token} successfully booked for {selected_date}!")
+        return redirect('live_queue', app_id=app.id)
+
+    return render(request, 'book_token.html', {'app': app})
+
+
+# 5. ലൈവ് ക്യൂ ട്രാക്കിംഗ് (യൂസറിന് വേണ്ടി)
+@login_required(login_url='login')
+def live_queue(request, app_id):
+    user_app = get_object_or_404(Application, id=app_id, user=request.user)
+
+    if not user_app.appointment_date:
+        return redirect('my_applications')
+
+    current_serving = Application.objects.filter(
+        appointment_date=user_app.appointment_date, 
+        status='IN_PROGRESS'
+    ).first()
+
+    ahead_count = Application.objects.filter(
+        appointment_date=user_app.appointment_date, 
+        status='TOKEN_BOOKED', 
+        token_number__lt=user_app.token_number
+    ).count()
+
+    return render(request, 'live_queue.html', {
+        'app': user_app,
+        'current_serving': current_serving,
+        'ahead_count': ahead_count,
+    })
+
+
+# 6. അക്ഷയ സ്റ്റാഫ് ഡാഷ്‌ബോർഡ്
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def staff_dashboard(request):
@@ -204,20 +286,72 @@ def staff_dashboard(request):
     })
 
 
+# 7. സ്റ്റാഫ് ഡോക്യുമെന്റുകൾ പരിശോധിച്ച് അപ്രൂവ്/റിജക്ട് ചെയ്യുന്നു
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def process_application(request, app_id):
     app = get_object_or_404(Application, id=app_id)
 
     if request.method == 'POST':
-        app.status = request.POST.get('status')
-        app.staff_remarks = request.POST.get('remarks')
+        action = request.POST.get('action') # 'approve' or 'reject'
         
-        if request.FILES.get('document'):
-            app.document = request.FILES['document']
-
+        if action == 'approve':
+            app.status = 'DOCS_APPROVED'
+            app.staff_remarks = request.POST.get('remarks', 'Documents verified and approved.')
+        elif action == 'reject':
+            app.status = 'REJECTED_DOCS'
+            app.rejection_reason = request.POST.get('rejection_reason')
+            app.staff_remarks = request.POST.get('remarks', 'Documents rejected.')
+        
         app.save()
-        messages.success(request, f"Application #{app.id} updated successfully.")
+
+        files = request.FILES.getlist('documents')
+        for uploaded_file in files:
+            ApplicationDocument.objects.create(
+                application=app,
+                document_name=uploaded_file.name,
+                file=uploaded_file
+            )
+
+        messages.success(request, f"Application #{app.application_id} processed successfully.")
         return redirect('staff_dashboard')
 
     return render(request, 'process_application.html', {'app': app})
+
+
+# 8. കൗണ്ടർ ലൈവ് ഡാഷ്‌ബോർഡ് (ഗവൺമെന്റിലേക്ക് അയക്കാൻ)
+@login_required(login_url='login')
+@user_passes_test(is_staff_user)
+def staff_counter(request):
+    today = datetime.date.today()
+    
+    waiting_apps = Application.objects.filter(appointment_date=today, status='TOKEN_BOOKED').order_by('token_number')
+    current_app = Application.objects.filter(appointment_date=today, status='IN_PROGRESS').first()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'call_next':
+            next_app = waiting_apps.first()
+            if next_app:
+                if current_app:
+                    current_app.status = 'TOKEN_BOOKED'
+                    current_app.save()
+                next_app.status = 'IN_PROGRESS'
+                next_app.save()
+            return redirect('staff_counter')
+
+        elif action == 'forward_to_govt':
+            app_id = request.POST.get('app_id')
+            app = get_object_or_404(Application, id=app_id)
+            app.govt_ref_number = request.POST.get('govt_ref_number')
+            app.staff_remarks = request.POST.get('staff_remarks')
+            app.status = 'FORWARDED_TO_GOVT'
+            app.save()
+            messages.success(request, f"Token #{app.token_number} successfully forwarded to Govt Portal.")
+            return redirect('staff_counter')
+
+    return render(request, 'staff_counter.html', {
+        'waiting_apps': waiting_apps,
+        'current_app': current_app
+    })

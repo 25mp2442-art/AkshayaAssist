@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4 text-center">
+            <h4 class="fw-bold text-success mb-3"> Book Your Slot</h4>
+            <p class="text-muted">Application: <strong>{{ app.application_id }}</strong></p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3 text-start">
+                    <label class="form-label fw-semibold">Select Appointment Date</label>
+                    <input type="date" name="appointment_date" class="form-control" required min="{{ current_date }}">
+                </div>
+                <button type="submit" class="btn btn-success w-100 rounded-3">Confirm & Book Token</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
