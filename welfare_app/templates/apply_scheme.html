@@ -1,20 +1,10 @@
-
 {% extends 'base.html' %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apply for {{ scheme.title }}</title>
-</head>
-<body class="bg-light">
-
 <div class="container mt-5 mb-5" style="max-width: 700px;">
-    <div class="card shadow border-0">
-        <div class="card-header bg-primary text-white p-3">
-            <h4 class="mb-0">{{ scheme.title }}</h4>
+    <div class="card shadow border-0 rounded-4">
+        <div class="card-header bg-primary text-white p-3 rounded-top-4">
+            <h4 class="mb-0 fw-bold">{{ scheme.title }}</h4>
             <small>Application Form / അപേക്ഷാ ഫോം</small>
         </div>
         <div class="card-body p-4">
@@ -25,7 +15,7 @@
                 {% csrf_token %}
 
                 <!-- 📞 Contact Info -->
-                <h5 class="text-secondary mb-3">Contact Information</h5>
+                <h5 class="text-secondary mb-3 fw-bold">Contact Information</h5>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Phone Number (ഫോൺ നമ്പർ)</label>
                     <input type="text" name="phone_number" class="form-control" placeholder="Enter 10-digit phone number" required>
@@ -33,7 +23,7 @@
 
                 <!-- 📝 Dynamic Extra Fields -->
                 {% if extra_fields_list %}
-                    <h5 class="text-secondary mt-4 mb-3">Additional Details Required</h5>
+                    <h5 class="text-secondary mt-4 mb-3 fw-bold">Additional Details Required</h5>
                     {% for field_name in extra_fields_list %}
                         <div class="mb-3">
                             <label class="form-label fw-bold">{{ field_name }}</label>
@@ -43,9 +33,9 @@
                 {% endif %}
 
                 <!-- 📄 Required Documents -->
-                <h5 class="text-secondary mt-4 mb-3">Document Upload</h5>
+                <h5 class="text-secondary mt-4 mb-3 fw-bold">Document Upload</h5>
                 {% if required_docs_list %}
-                    <div class="alert alert-warning mb-3 p-3">
+                    <div class="alert alert-warning mb-3 p-3 rounded-3">
                         <strong class="d-block mb-1">Required Documents to Upload:</strong>
                         <ul class="mb-0 ps-3">
                             {% for doc in required_docs_list %}
@@ -56,18 +46,20 @@
                 {% endif %}
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Upload Document File (PDF / Image)</label>
-                    <input type="file" name="documents" class="form-control" multiple required>                </div>
+                    <label class="form-label fw-bold">Upload Document Files (PDF / Image)</label>
+                    <!-- multiple ചേർത്തിട്ടുണ്ട്, ഒന്നിൽ കൂടുതൽ ഫയൽ ഒന്നിച്ച് സെലക്ട് ചെയ്യാം -->
+                    <input type="file" name="documents" class="form-control" multiple required>
+                    <small class="text-muted d-block mt-1">
+                        <i class="fa-solid fa-circle-info me-1"></i> (ഒരുമിച്ച് ഒന്നിലധികം ഫയലുകൾ Select ചെയ്യാൻ <strong>Ctrl</strong> കീ പ്രസ്സ് ചെയ്തു പിടിക്കുക)
+                    </small>
+                </div>
 
                 <div class="d-grid gap-2 mt-4">
-                    <button type="submit" class="btn btn-success btn-lg">Submit Application</button>
-                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success btn-lg rounded-3 fw-bold">Submit Application</button>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-3">Cancel</a>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-</body>
-</html>
 {% endblock %}

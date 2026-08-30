@@ -135,54 +135,47 @@ def home(request):
 
 
 # 1. അപേക്ഷ സമർപ്പിക്കുന്നു (സ്റ്റാറ്റസ്: PENDING_VERIFICATION)
-@login_required(login_url='login')
+@login_required
 def apply_scheme(request, scheme_id):
     scheme = get_object_or_404(Scheme, id=scheme_id)
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
 
-    existing = Application.objects.filter(user=request.user, scheme=scheme).first()
-    if existing:
-        messages.info(request, "You have already applied for this scheme.")
-        return redirect('my_applications')
+    # Dynamic comma separated list എടുക്കുന്നു
+    extra_fields_list = [f.strip() for f in scheme.extra_fields.split(',') if f.strip()]
+    required_docs_list = [d.strip() for d in scheme.required_documents.split(',') if d.strip()]
 
     if request.method == 'POST':
-        phone = request.POST.get('phone_number')
+        phone_number = request.POST.get('phone_number')
 
-        extra_data = {}
-        if scheme.extra_fields:
-            fields_list = [f.strip() for f in scheme.extra_fields.split(',') if f.strip()]
-            for field_name in fields_list:
-                extra_data[field_name] = request.POST.get(field_name, '')
+        # Extra Fields JSON ആയി സൂക്ഷിക്കുന്നു
+        form_data = {}
+        for field_name in extra_fields_list:
+            form_data[field_name] = request.POST.get(field_name, '')
 
-        app = Application.objects.create(
+        # Application ക്രിയേറ്റ് ചെയ്യൽ
+        application = Application.objects.create(
             user=request.user,
             scheme=scheme,
-            phone_number=phone,
-            form_data=extra_data,
-            status='PENDING_VERIFICATION'
+            phone_number=phone_number,
+            form_data=form_data
         )
 
+        # Multiple ഫയലുകൾ എടുത്ത് ApplicationDocument-ൽ ചേർക്കുന്നു
         files = request.FILES.getlist('documents')
         for uploaded_file in files:
             ApplicationDocument.objects.create(
-                application=app,
+                application=application,
                 document_name=uploaded_file.name,
                 file=uploaded_file
             )
 
-        messages.success(request, f"Application submitted! Application Ref ID: {app.application_id}")
+        messages.success(request, 'Application submitted successfully!')
         return redirect('my_applications')
 
-    required_docs_list = [d.strip() for d in scheme.required_documents.split(',') if d.strip()] if scheme.required_documents else []
-    extra_fields_list = [f.strip() for f in scheme.extra_fields.split(',') if f.strip()] if scheme.extra_fields else []
-
-    context = {
-        'scheme': scheme, 
-        'profile': profile,
-        'required_docs_list': required_docs_list,
-        'extra_fields_list': extra_fields_list
-    }
-    return render(request, 'apply_scheme.html', context)
+    return render(request, 'apply_scheme.html', {
+        'scheme': scheme,
+        'extra_fields_list': extra_fields_list,
+        'required_docs_list': required_docs_list
+    })
 
 
 # 2. യൂസറുടെ ആപ്ലിക്കേഷൻ ലിസ്റ്റ്

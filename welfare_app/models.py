@@ -114,45 +114,43 @@ class Scheme(models.Model):
 
 
 class Application(models.Model):
-    # പുതിയ ഫ്ലോയ്ക്കുള്ള സ്റ്റാറ്റസുകൾ
-    STATUS_CHOICES = [
+    STATUS_CHOICES = (
         ('PENDING_VERIFICATION', 'Pending Document Verification'),
-        ('REJECTED_DOCS', 'Documents Rejected (Re-upload Needed)'),
         ('DOCS_APPROVED', 'Documents Approved (Eligible for Token)'),
-        ('TOKEN_BOOKED', 'Token Booked / Waiting in Queue'),
+        ('REJECTED_DOCS', 'Documents Rejected'),
+        ('TOKEN_BOOKED', 'Token Booked'),
         ('IN_PROGRESS', 'Processing at Counter'),
-        ('FORWARDED_TO_GOVT', 'Submitted to Govt Portal'),
-    ]
+        ('FORWARDED_TO_GOVT', 'Forwarded to Govt Portal'),
+    )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # user ഫീൽഡ് ചേർത്തു (null=True നൽകിയതിനാൽ പഴയ ഡാറ്റ ഇല്ലാതാകില്ല)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    application_id = models.CharField(max_length=50, null=True, blank=True)   
     scheme = models.ForeignKey(Scheme, on_delete=models.CASCADE)
-    
-    # ട്രാക്കിംഗ് ഐഡി (റെഫറൻസ് നമ്പർ)
-    application_id = models.CharField(max_length=20, unique=True, editable=False, null=True, blank=True)
-    
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='PENDING_VERIFICATION')
-    rejection_reason = models.TextField(blank=True, null=True)
-    
-    # യൂസർ തിരഞ്ഞെടുക്കുന്ന അപ്പോയിന്റ്മെന്റ് ഡേറ്റും ടോക്കൺ നമ്പറും
-    appointment_date = models.DateField(null=True, blank=True)
-    token_number = models.IntegerField(null=True, blank=True)
-
-    phone_number = models.CharField(max_length=15, default="")
+    phone_number = models.CharField(max_length=15)
     form_data = models.JSONField(default=dict, blank=True)
     
-    # അക്ഷയ സ്റ്റാഫിന്റെ വിവരങ്ങളും ഗവൺമെന്റ് പോർട്ടൽ റഫറൻസും
-    govt_ref_number = models.CharField(max_length=100, blank=True, null=True)
-    staff_remarks = models.TextField(blank=True, default="Application submitted. Awaiting verification.")
+    # Verification & Token Info
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='PENDING_VERIFICATION')
+    rejection_reason = models.TextField(blank=True, null=True)
+    staff_remarks = models.TextField(blank=True, null=True)
     
+    # Slot & Queue
+    appointment_date = models.DateField(null=True, blank=True)
+    token_number = models.IntegerField(null=True, blank=True)
+    
+    # Govt Portal Integration
+    govt_ref_number = models.CharField(max_length=50, null=True, blank=True)
     applied_date = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if not self.application_id:
-            self.application_id = f"AKS-{uuid.uuid4().hex[:6].upper()}"
+            self.application_id = 'APP-' + uuid.uuid4().hex[:8].upper()
         super().save(*args, **kwargs)
 
-    def __str__(self): 
-        return f"{self.application_id} - {self.user.username} ({self.status})"
+    def __str__(self):
+        username = self.user.username if self.user else "Unknown"
+        return f"{self.application_id} - {username}"
 
 
 class ApplicationDocument(models.Model):

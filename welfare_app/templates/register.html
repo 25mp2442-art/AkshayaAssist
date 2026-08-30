@@ -1,96 +1,58 @@
 {% extends 'base.html' %}
 
+{% block title %}Register - Akshaya Portal{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AkshayaAssist - Register</title>
-    <!-- Bootstrap CSS CDN -->
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px 0;
-        }
-        .register-card {
-            background: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 480px;
-            padding: 35px;
-        }
-        .brand-title {
-            color: #1e3c72;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #6c757d;
-            font-size: 0.95rem;
-            margin-bottom: 25px;
-        }
-        /* Django Form Styling */
-        .register-card input[type="text"],
-        .register-card input[type="password"] {
-            width: 100%;
-            padding: 10px 15px;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            outline: none;
-            transition: all 0.3s;
-        }
-        .register-card input[type="text"]:focus,
-        .register-card input[type="password"]:focus {
-            border-color: #2a5298;
-            box-shadow: 0 0 5px rgba(42, 82, 152, 0.4);
-        }
-        .helptext, .helptext ul {
-            font-size: 0.78rem;
-            color: #6c757d;
-            margin-bottom: 10px;
-            padding-left: 15px;
-        }
-        .btn-custom {
-            background: #1e3c72;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-weight: 600;
-            width: 100%;
-            transition: background 0.3s;
-        }
-        .btn-custom:hover {
-            background: #2a5298;
-            color: white;
-        }
-    </style> -->
-</head>
-<body>
+<div class="container d-flex justify-content-center align-items-center py-4">
+    <div class="card shadow-lg border-0 rounded-4 p-4" style="max-width: 520px; width: 100%;">
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <i class="fa-solid fa-user-plus text-success fa-3x mb-2"></i>
+                <h3 class="fw-bold text-dark">Create Account</h3>
+                <p class="text-muted small">Register to access welfare schemes</p>
+            </div>
 
-<div class="register-card">
-    <h2 class="brand-title">AkshayaAssist</h2>
-    <p class="subtitle">Create your account to get started</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="register-form-wrapper">
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted small" style="font-size: 0.75rem;">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
 
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-custom mt-2">Sign Up</button>
-    </form>
+                <button type="submit" class="btn btn-success btn-lg w-100 rounded-3 fw-bold mt-3 shadow-sm">
+                    Sign Up
+                </button>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="small text-muted mb-0">Already have an account? <a href="{% url 'login' %}" class="text-success fw-bold text-decoration-none">Login</a></p>
+            </div>
+        </div>
+    </div>
 </div>
 
-</body>
-</html>
+<style>
+    /* Django auto-generated inputs formatting */
+    .register-form-wrapper input {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+    }
+    .register-form-wrapper ul {
+        padding-left: 1.2rem;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+</style>
 {% endblock %}
