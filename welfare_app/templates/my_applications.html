@@ -1,159 +1,63 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Applications | AkshayaAssist</title>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-    /* 1. Page Background & Font */
-    body {
-        background-color: #f4f6f9;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #333333;
-    }
-
-    /* 2. Interactive Cards (Hover & Lift Effect) */
-    .card {
-        border: none !important;
-        border-radius: 14px !important;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        background: #ffffff;
-    }
-
-    .card:hover {
-        transform: translateY(-4px); /* Hover ചെയ്യുമ്പോൾ കാർഡ് ചെറുതായി ഉയരും */
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    /* 3. Headers & Navbar Customization */
-    .navbar {
-        background: linear-gradient(135deg, #1e3c72, #2a5298) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .card-header {
-        background: linear-gradient(135deg, #1e3c72, #2a5298) !important;
-        color: #ffffff !important;
-        border-top-left-radius: 14px !important;
-        border-top-right-radius: 14px !important;
-        font-weight: 600;
-        padding: 1rem 1.25rem;
-    }
-
-    /* 4. Smooth Buttons with Subtle Hover */
-    .btn {
-        border-radius: 8px !important;
-        font-weight: 500;
-        transition: all 0.2s ease-in-out !important;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px); /* ബട്ടണുകളിൽ മൗസ് വെക്കുമ്പോൾ Hover effect */
-    }
-
-    .btn-primary {
-        background-color: #2a5298 !important;
-        border-color: #2a5298 !important;
-    }
-
-    .btn-primary:hover {
-        background-color: #1e3c72 !important;
-    }
-
-    /* 5. Inputs & Forms (Glow effect on focus) */
-    .form-control, .form-select {
-        border-radius: 8px !important;
-        border: 1px solid #ced4da;
-        padding: 0.6rem 0.9rem;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .form-control:focus, .form-select:focus {
-        border-color: #2a5298 !important;
-        box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.15) !important;
-    }
-
-    /* 6. Tables - Hover Effects (For Dashboards) */
-    .table {
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .table thead th {
-        background-color: #e9ecef;
-        color: #495057;
-        font-weight: 600;
-        border-bottom: none;
-    }
-
-    .table-hover tbody tr {
-        transition: background-color 0.2s ease;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: rgba(42, 82, 152, 0.05) !important; /* Row-ലൂടെ മൗസ് പോകുമ്പോൾ Soft Highlight */
-    }
-
-    /* 7. Badges */
-    .badge {
-        padding: 0.45em 0.75em;
-        font-weight: 600;
-        border-radius: 6px;
-    }
-</style> -->
-</head>
-<body class="bg-light">
-
-    <nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">AkshayaAssist</a>
-            <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm rounded-pill">Back to Dashboard</a>
-        </div>
-    </nav>
-
-    <div class="container">
-        <h4 class="fw-bold mb-4">My Submitted Applications 📄</h4>
-
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+<div class="container mt-4">
+    <h2>My Applications</h2>
+    <hr>
+    {% if applications %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
                     <tr>
-                        <th>Scheme Title</th>
+                        <th>App ID</th>
+                        <th>Scheme</th>
                         <th>Applied Date</th>
                         <th>Status</th>
-                        <th>Remarks</th>
+                        <th>Actions / Token</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for app in applications %}
                     <tr>
-                        <td class="fw-bold">{{ app.scheme.title }}</td>
-                        <td class="text-muted small">{{ app.applied_date|date:"d M Y, h:i A" }}</td>
+                        <td><strong>{{ app.application_id }}</strong></td>
+                        <td>{{ app.scheme.title }}</td>
+                        <td>{{ app.applied_date|date:"d M Y" }}</td>
                         <td>
-                            {% if app.status == 'Pending' %}
-                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
-                            {% elif app.status == 'Approved' %}
-                                <span class="badge bg-success px-3 py-2 rounded-pill">Approved</span>
-                            {% else %}
-                                <span class="badge bg-danger px-3 py-2 rounded-pill">Rejected</span>
+                            {% if app.status == 'PENDING_VERIFICATION' %}
+                                <span class="badge bg-warning text-dark">Pending Verification</span>
+                            {% elif app.status == 'REJECTED_DOCS' %}
+                                <span class="badge bg-danger">Docs Rejected</span>
+                                <small class="d-block text-danger">{{ app.rejection_reason }}</small>
+                            {% elif app.status == 'DOCS_APPROVED' %}
+                                <span class="badge bg-info text-dark">Docs Approved</span>
+                            {% elif app.status == 'TOKEN_BOOKED' %}
+                                <span class="badge bg-primary">Token Booked</span>
+                            {% elif app.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-success">At Counter</span>
+                            {% elif app.status == 'FORWARDED_TO_GOVT' %}
+                                <span class="badge bg-secondary">Forwarded to Govt</span>
                             {% endif %}
                         </td>
-                        <td class="text-muted small">{{ app.remarks|default:"Under verification" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center py-4 text-muted">You haven't applied for any schemes yet.</td>
+                        <td>
+                            {% if app.status == 'REJECTED_DOCS' %}
+                                <a href="{% url 'reupload_docs' app.id %}" class="btn btn-sm btn-danger">Re-upload Documents</a>
+                            {% elif app.status == 'DOCS_APPROVED' %}
+                                <a href="{% url 'book_token' app.id %}" class="btn btn-sm btn-success">Book Token Date</a>
+                            {% elif app.status == 'TOKEN_BOOKED' or app.status == 'IN_PROGRESS' %}
+                                <a href="{% url 'live_queue' app.id %}" class="btn btn-sm btn-primary">Track Live Status</a>
+                            {% elif app.status == 'FORWARDED_TO_GOVT' %}
+                                <small class="text-muted">Ref: {{ app.govt_ref_number }}</small>
+                            {% else %}
+                                <small class="text-muted">Under Review</small>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
-
-</body>
-</html>
+    {% else %}
+        <p>No applications found.</p>
+    {% endif %}
+</div>
 {% endblock %}

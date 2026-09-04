@@ -1,19 +1,26 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-5" style="max-width: 600px;">
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-4">
-            <h4 class="fw-bold text-danger mb-2">Re-upload Documents</h4>
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h4>Re-upload Rejected Documents</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Application ID:</strong> {{ app.application_id }}</p>
+            <p><strong>Scheme:</strong> {{ app.scheme.title }}</p>
             <div class="alert alert-warning">
-                <strong>Reason for Rejection:</strong> {{ app.rejection_reason }}
+                <strong>Reason for Rejection:</strong><br>
+                {{ app.rejection_reason }}
             </div>
+
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Upload Correct Documents</label>
+                    <label class="form-label">Upload Corrected Documents (PDF/Images)</label>
                     <input type="file" name="documents" class="form-control" multiple required>
                 </div>
-                <button type="submit" class="btn btn-danger w-100 rounded-3">Submit Again</button>
+                <button type="submit" class="btn btn-primary w-100">Submit for Re-verification</button>
             </form>
         </div>
     </div>

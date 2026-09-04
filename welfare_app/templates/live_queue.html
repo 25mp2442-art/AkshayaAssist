@@ -1,19 +1,49 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-5 text-center" style="max-width: 500px;">
-    <div class="card shadow border-0 rounded-4 p-4">
-        <span class="badge bg-primary fs-6 mb-2">Token #{{ app.token_number }}</span>
-        <h3 class="fw-bold text-dark">{{ app.scheme.title }}</h3>
-        <p class="text-muted">Date: {{ app.appointment_date }}</p>
-        <hr>
-        <div class="my-3">
-            <h5>Currently Serving at Counter:</h5>
-            <h2 class="text-success fw-extrabold">
-                {% if current_serving %} #{{ current_serving.token_number }} {% else %} Waiting to start... {% endif %}
-            </h2>
+<div class="container mt-4 text-center" style="max-width: 600px;">
+    <div class="card shadow-lg border-primary">
+        <div class="card-header bg-primary text-white">
+            <h3>Live Queue Status</h3>
         </div>
-        <div class="alert alert-info rounded-3 mt-3">
-            <strong>People Ahead of You:</strong> {{ ahead_count }}
+        <div class="card-body">
+            <h5>Appointment Date: <strong>{{ app.appointment_date|date:"d M Y" }}</strong></h5>
+            <hr>
+            <div class="row my-4">
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded border">
+                        <small class="text-muted d-block">YOUR TOKEN</small>
+                        <h1 class="display-3 text-primary font-weight-bold">#{{ app.token_number }}</h1>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded border">
+                        <small class="text-muted d-block">NOW SERVING AT COUNTER</small>
+                        <h1 class="display-3 text-success font-weight-bold">
+                            {% if current_serving %}
+                                #{{ current_serving.token_number }}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </h1>
+                    </div>
+                </div>
+            </div>
+
+            {% if app.status == 'IN_PROGRESS' %}
+                <div class="alert alert-success fs-5">
+                    <strong>It's your turn! Please proceed to the Akshaya Counter.</strong>
+                </div>
+            {% elif app.status == 'FORWARDED_TO_GOVT' %}
+                <div class="alert alert-info fs-5">
+                    <strong>Process Completed!</strong> Submitted to Govt Portal.<br>
+                    <small>Govt Ref No: {{ app.govt_ref_number }}</small>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <strong>{{ ahead_count }}</strong> people ahead of you in the queue.
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
