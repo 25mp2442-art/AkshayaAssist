@@ -6,14 +6,14 @@
     <hr>
     {% if applications %}
         <div class="table-responsive">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
                         <th>App ID</th>
                         <th>Scheme</th>
                         <th>Applied Date</th>
                         <th>Status</th>
-                        <th>Actions / Token</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -23,32 +23,39 @@
                         <td>{{ app.scheme.title }}</td>
                         <td>{{ app.applied_date|date:"d M Y" }}</td>
                         <td>
-                            {% if app.status == 'PENDING_VERIFICATION' %}
+                            {% if app.status == 'PENDING_VERIFICATION' or app.status == 'Pending' %}
                                 <span class="badge bg-warning text-dark">Pending Verification</span>
-                            {% elif app.status == 'REJECTED_DOCS' %}
+                            {% elif app.status == 'REJECTED_DOCS' or app.status == 'Rejected' %}
                                 <span class="badge bg-danger">Docs Rejected</span>
-                                <small class="d-block text-danger">{{ app.rejection_reason }}</small>
-                            {% elif app.status == 'DOCS_APPROVED' %}
-                                <span class="badge bg-info text-dark">Docs Approved</span>
-                            {% elif app.status == 'TOKEN_BOOKED' %}
-                                <span class="badge bg-primary">Token Booked</span>
-                            {% elif app.status == 'IN_PROGRESS' %}
-                                <span class="badge bg-success">At Counter</span>
-                            {% elif app.status == 'FORWARDED_TO_GOVT' %}
-                                <span class="badge bg-secondary">Forwarded to Govt</span>
+                            {% elif app.status == 'DOCS_APPROVED' or app.status == 'Approved' %}
+                                <span class="badge bg-success">Docs Approved</span>
+                            {% elif app.status == 'TOKEN_BOOKED' or app.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-primary">Token Booked (#{{ app.token_number }})</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ app.status }}</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if app.status == 'REJECTED_DOCS' %}
-                                <a href="{% url 'reupload_docs' app.id %}" class="btn btn-sm btn-danger">Re-upload Documents</a>
-                            {% elif app.status == 'DOCS_APPROVED' %}
-                                <a href="{% url 'book_token' app.id %}" class="btn btn-sm btn-success">Book Token Date</a>
+                            <!-- 1. അപ്രൂവ് ആയാൽ ടോക്കൺ ബുക്ക് ചെയ്യാനുള്ള ബട്ടൺ -->
+                            {% if app.status == 'DOCS_APPROVED' or app.status == 'Approved' %}
+                                <a href="{% url 'book_token' app.id %}" class="btn btn-sm btn-success">
+                                    Book Token Date
+                                </a>
+
+                            <!-- 2. ടോക്കൺ ബുക്ക് ചെയ്തിട്ടുണ്ടെങ്കിൽ എപ്പോഴും കാണുന്ന ലൈവ് ക്യൂ ബട്ടൺ -->
                             {% elif app.status == 'TOKEN_BOOKED' or app.status == 'IN_PROGRESS' %}
-                                <a href="{% url 'live_queue' app.id %}" class="btn btn-sm btn-primary">Track Live Status</a>
-                            {% elif app.status == 'FORWARDED_TO_GOVT' %}
-                                <small class="text-muted">Ref: {{ app.govt_ref_number }}</small>
+                                <a href="{% url 'live_queue' app.id %}" class="btn btn-sm btn-primary">
+                                    🔴 Track Live Queue
+                                </a>
+
+                            <!-- 3. ഡോക്യുമെന്റ് റിജക്ട് ആയാൽ Re-upload ബട്ടൺ -->
+                            {% elif app.status == 'REJECTED_DOCS' or app.status == 'Rejected' %}
+                                <a href="{% url 'reupload_docs' app.id %}" class="btn btn-sm btn-danger">
+                                    Re-upload Documents
+                                </a>
+
                             {% else %}
-                                <small class="text-muted">Under Review</small>
+                                <small class="text-muted">Awaiting Verification</small>
                             {% endif %}
                         </td>
                     </tr>

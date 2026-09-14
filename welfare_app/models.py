@@ -122,7 +122,7 @@ class Application(models.Model):
         return f"{self.application_id} - {self.user.username} ({self.scheme.title})"
 
 class ApplicationDocument(models.Model):
-    application = models.ForeignKey(Application, on_delete=models.CASCADE,related_name='documents')
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='documents')
     document_name = models.CharField(max_length=255)
     file = models.FileField(upload_to='application_docs/')
     uploaded_at = models.DateTimeField(auto_now_add=True)

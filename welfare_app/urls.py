@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Citizen URLs
     path('', views.home, name='home'),
     path('register/', views.register, name='register'),
     path('login/', views.login_view, name='login'),
@@ -10,7 +11,7 @@ urlpatterns = [
     path('apply/<int:scheme_id>/', views.apply_scheme, name='apply_scheme'),
     path('my-applications/', views.my_applications, name='my_applications'),
     
-    # Workflow URLs
+    # Citizen Workflow URLs
     path('reupload/<int:app_id>/', views.reupload_docs, name='reupload_docs'),
     path('book-token/<int:app_id>/', views.book_token, name='book_token'),
     path('live-queue/<int:app_id>/', views.live_queue, name='live_queue'),

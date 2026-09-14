@@ -5,6 +5,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Max
+from django.utils import timezone  # ഫയലിന്റെ മുകളിൽ ഇത് Import ചെയ്യുക
 
 from .models import UserProfile, Scheme, Application, ApplicationDocument
 
@@ -167,11 +168,18 @@ def apply_scheme(request, scheme_id):
     return render(request, 'apply_scheme.html', context)
 
 # 5. User Applications List
+import datetime
+
 @login_required(login_url='login')
 def my_applications(request):
     applications = Application.objects.filter(user=request.user).order_by('-applied_date')
-    return render(request, 'my_applications.html', {'applications': applications})
-
+    today = datetime.date.today()
+    
+    return render(request, 'my_applications.html', {
+        'applications': applications,
+        'today': today
+    })
+  
 # 6. User Re-uploads Documents
 @login_required(login_url='login')
 def reupload_docs(request, app_id):
@@ -189,7 +197,7 @@ def reupload_docs(request, app_id):
             app.status = 'PENDING_VERIFICATION'
             app.rejection_reason = ""
             app.save()
-            messages.success(request, "Documents uploaded again. Under review by Akshaya Staff.")
+            messages.success(request, "Documents re-uploaded successfully. Awaiting Staff Verification.")
             return redirect('my_applications')
     return render(request, 'reupload_docs.html', {'app': app})
 
@@ -198,8 +206,8 @@ def reupload_docs(request, app_id):
 def book_token(request, app_id):
     app = get_object_or_404(Application, id=app_id, user=request.user)
     
-    # സ്റ്റാഫ് ഡോക്യുമെന്റുകൾ പരിശോധിച്ചു അപ്രൂവ് ആക്കിയാൽ മാത്രം ടോക്കൺ ബുക്ക് ചെയ്യാൻ അനുവദിക്കുന്നു
-    if app.status not in ['DOCS_APPROVED', 'Under Verification', 'Submitted']:
+    # അക്ഷയ സ്റ്റാഫ് അപ്രൂവ് ചെയ്താൽ മാത്രം ടോക്കൺ ബുക്ക് ചെയ്യാൻ അനുവദിക്കുന്നു
+    if app.status != 'DOCS_APPROVED':
         messages.error(request, "Documents must be approved by staff before booking a token.")
         return redirect('my_applications')
 
@@ -214,7 +222,7 @@ def book_token(request, app_id):
             app.status = 'TOKEN_BOOKED'
             app.save()
 
-            messages.success(request, f"Token #{new_token} booked for {selected_date}!")
+            messages.success(request, f"Token #{new_token} successfully booked for {selected_date}!")
             return redirect('live_queue', app_id=app.id)
 
     return render(request, 'book_token.html', {'app': app})
@@ -263,18 +271,17 @@ def staff_dashboard(request):
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def staff_verify_docs(request, app_id):
-    # prefetch_related ഉപയോഗിച്ച് അപ്‌ലോഡ് ചെയ്ത ഫയലുകൾ കൃത്യമായി എടുക്കുന്നു
     app = get_object_or_404(Application.objects.prefetch_related('documents'), id=app_id)
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'approve':
             app.status = 'DOCS_APPROVED'
             app.rejection_reason = ""
-            messages.success(request, f"Documents for Application approved. User can now book a token.")
+            messages.success(request, f"Documents for {app.application_id} approved. User can now book a token.")
         elif action == 'reject':
             app.status = 'REJECTED_DOCS'
             app.rejection_reason = request.POST.get('rejection_reason', 'Documents unclear or incomplete.')
-            messages.warning(request, f"Application marked as rejected.")
+            messages.warning(request, f"Application {app.application_id} marked as rejected.")
         
         app.staff_remarks = request.POST.get('staff_remarks', '')
         app.save()
@@ -297,7 +304,7 @@ def staff_counter_process(request):
             next_app = waiting_apps.first()
             if next_app:
                 if current_app:
-                    current_app.status = 'TOKEN_BOOKED'
+                    current_app.status = 'FORWARDED_TO_GOVT' # previous token state update
                     current_app.save()
                 next_app.status = 'IN_PROGRESS'
                 next_app.save()
@@ -310,7 +317,7 @@ def staff_counter_process(request):
             app.staff_remarks = request.POST.get('staff_remarks')
             app.status = 'FORWARDED_TO_GOVT'
             app.save()
-            messages.success(request, f"Application forwarded to Government Portal.")
+            messages.success(request, f"Application {app.application_id} forwarded to Government Portal.")
             return redirect('staff_counter_process')
 
     return render(request, 'staff_counter.html', {
@@ -322,7 +329,6 @@ def staff_counter_process(request):
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def process_application(request, app_id):
-    # prefetch_related('documents') വഴി അപ്‌ലോഡ് ചെയ്ത എല്ലാ ഫയലുകളും എളുപ്പത്തിൽ കാണാൻ സഹായിക്കും
     app = get_object_or_404(Application.objects.prefetch_related('documents'), id=app_id)
     
     if request.method == 'POST':

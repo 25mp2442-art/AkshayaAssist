@@ -9,15 +9,30 @@
         <div class="card-body">
             <p><strong>Application ID:</strong> {{ app.application_id }}</p>
             <p><strong>Scheme:</strong> {{ app.scheme.title }}</p>
-            
-            <form method="POST">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label">Select Visit Date</label>
-                    <input type="date" name="appointment_date" class="form-control" required min="{{ today }}">
+            <hr>
+
+            {% if app.token_number %}
+                <div class="alert alert-info text-center">
+                    <h5>Token Already Booked!</h5>
+                    <p class="mb-1">Date: <strong>{{ app.appointment_date|date:"d M Y" }}</strong></p>
+                    <p class="mb-3">Token Number: <strong>#{{ app.token_number }}</strong></p>
+                    <a href="{% url 'live_queue' app.id %}" class="btn btn-primary w-100">Track Live Queue</a>
                 </div>
-                <button type="submit" class="btn btn-success w-100">Confirm & Get Token Number</button>
-            </form>
+            {% else %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Select Visit Date</label>
+                        <input type="date" id="app_date" name="appointment_date" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Confirm & Get Token Number</button>
+                </form>
+
+                <script>
+                    // ഇന്നു മുതലുള്ള തീയതികൾ മാത്രം കാണിക്കാൻ
+                    document.getElementById('app_date').min = new Date().toISOString().split('T')[0];
+                </script>
+            {% endif %}
         </div>
     </div>
 </div>
