@@ -1,48 +1,72 @@
 {% extends 'base.html' %}
+
 {% block content %}
 <div class="container-fluid mt-4">
+    <h3 class="fw-bold mb-4">Akshaya Staff Counter Dashboard</h3>
+    
     <div class="row">
+        <!-- Live Counter Control & Processing Panel -->
         <div class="col-md-5">
-            <div class="card shadow-sm border-0 p-3 mb-3">
-                <h4 class="fw-bold text-primary">Live Counter</h4>
+            <div class="card shadow-sm border-0 p-3 mb-3 bg-white rounded">
+                <h4 class="fw-bold text-primary mb-3">Live Counter Action</h4>
                 <form method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="call_next">
-                    <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">Call Next Token 📢</button>
+                    <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold shadow-sm" {% if not waiting_apps and not current_app %}disabled{% endif %}>
+                        Call Next Token 📢
+                    </button>
                 </form>
             </div>
+
             {% if current_app %}
-            <div class="card shadow-sm border-0 p-4 bg-light">
-                <h5 class="text-success fw-bold">Now Processing Token #{{ current_app.token_number }}</h5>
-                <p><strong>Applicant:</strong> {{ current_app.user.username }}</p>
+            <div class="card shadow-sm border-0 p-4 bg-light border-start border-4 border-success rounded">
+                <small class="text-muted text-uppercase fw-bold d-block mb-1">Now Serving</small>
+                <h1 class="display-3 text-success fw-bold mb-2">#{{ current_app.token_number }}</h1>
+                <p class="mb-1"><strong>Applicant:</strong> {{ current_app.user.username }}</p>
+                <p class="mb-1"><strong>App ID:</strong> {{ current_app.application_id }}</p>
+                <p class="mb-3"><strong>Scheme:</strong> {{ current_app.scheme.title }}</p>
+                <hr>
                 <form method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="forward_to_govt">
                     <input type="hidden" name="app_id" value="{{ current_app.id }}">
-                    <div class="mb-2">
-                        <input type="text" name="govt_ref_number" class="form-control" placeholder="Govt Ack / Ref No." required>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Govt Ack / Ref No.</label>
+                        <input type="text" name="govt_ref_number" class="form-control" placeholder="Enter Reference Number" required>
                     </div>
-                    <div class="mb-2">
-                        <textarea name="staff_remarks" class="form-control" placeholder="Remarks"></textarea>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Staff Remarks</label>
+                        <textarea name="staff_remarks" class="form-control" rows="2" placeholder="Optional remarks"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Forward to Govt & Complete</button>
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2">Forward to Govt & Complete</button>
                 </form>
+            </div>
+            {% else %}
+            <div class="card shadow-sm border-0 p-4 text-center text-muted bg-light rounded">
+                <p class="mb-0">No active token at counter. Click <strong>Call Next Token</strong> to process.</p>
             </div>
             {% endif %}
         </div>
+
+        <!-- Waiting Queue List -->
         <div class="col-md-7">
-            <div class="card shadow-sm border-0 p-3">
-                <h5 class="fw-bold">Today's Waiting Queue</h5>
-                <ul class="list-group">
+            <div class="card shadow-sm border-0 p-3 bg-white rounded">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Today's Waiting Queue</h5>
+                    <span class="badge bg-primary rounded-pill">{{ waiting_apps|length }} Waiting</span>
+                </div>
+                <ul class="list-group list-group-flush">
                     {% for app in waiting_apps %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                         <div>
-                            <strong>Token #{{ app.token_number }}</strong> - {{ app.user.username }}
+                            <span class="fs-5 fw-bold text-dark me-2">Token #{{ app.token_number }}</span>
+                            <span class="text-muted">({{ app.user.username }})</span>
+                            <div class="small text-secondary">App ID: {{ app.application_id }}</div>
                         </div>
-                        <span class="badge bg-secondary">{{ app.scheme.title }}</span>
+                        <span class="badge bg-secondary p-2">{{ app.scheme.title }}</span>
                     </li>
                     {% empty %}
-                    <li class="list-group-item text-center text-muted">No pending tokens for today.</li>
+                    <li class="list-group-item text-center text-muted py-4">No pending tokens waiting in queue for today.</li>
                     {% endfor %}
                 </ul>
             </div>

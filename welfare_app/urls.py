@@ -21,4 +21,6 @@ urlpatterns = [
     path('staff/verify/<int:app_id>/', views.staff_verify_docs, name='staff_verify_docs'),
     path('staff/counter/', views.staff_counter_process, name='staff_counter_process'),
     path('process-application/<int:app_id>/', views.process_application, name='process_application'),
+    # urls.pyൽ ചേർക്കുക:
+    path('staff/govt-form/<int:app_id>/', views.staff_govt_form_process, name='staff_govt_form_process'),
 ]

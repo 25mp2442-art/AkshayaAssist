@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 850px;">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">Government Portal - Official Entry Form</h4>
+                <small class="text-info">Portal: {{ app.scheme.department }} | Scheme: {{ app.scheme.title }}</small>
+            </div>
+            <span class="badge bg-warning text-dark fs-6">App ID: {{ app.application_id }}</span>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <!-- 1. സിറ്റിസൺ പ്രൊഫൈലിൽ നിന്നുള്ള വിവരങ്ങൾ (Auto-Filled) -->
+                <h5 class="text-primary fw-bold mb-3">1. Citizen Verified Data (Auto-Fetched)</h5>
+                <div class="row g-3 mb-4 bg-light p-3 rounded border">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">Applicant Name</label>
+                        <input type="text" class="form-control fw-bold" value="{{ app.user.username }}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">Contact Phone</label>
+                        <input type="text" class="form-control" value="{{ app.phone_number }}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">Applied Date</label>
+                        <input type="text" class="form-control" value="{{ app.applied_date|date:'d M Y' }}" readonly>
+                    </div>
+                </div>
+
+                <!-- 2. അപേക്ഷകൻ അപ്ലൈ ചെയ്തപ്പോൾ കൊടുത്ത വിവരങ്ങൾ (Citizen Form Data) -->
+                {% if app.form_data %}
+                <h5 class="text-primary fw-bold mb-3">2. Data Submitted by Citizen</h5>
+                <div class="row g-3 mb-4 bg-light p-3 rounded border">
+                    {% for key, value in app.form_data.items %}
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">{{ key }}</label>
+                        <input type="text" class="form-control" value="{{ value }}" readonly>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- 3. ഈ സ്കീമിന് ആവശ്യമായ വിപുലമായ ഫോം ഫീൽഡുകൾ (Dynamic Staff Data Entry) -->
+                <h5 class="text-primary fw-bold mb-3">3. Govt Portal Processing Entry</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Aadhaar Biometric Status</label>
+                        <select class="form-select border-primary" required>
+                            <option value="VERIFIED">Verified via Biometric / OTP</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Direct Benefit Transfer (DBT) Bank Account</label>
+                        <input type="text" name="bank_acc" class="form-control" placeholder="Enter Bank Account Number" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">IFSC Code</label>
+                        <input type="text" name="ifsc" class="form-control" placeholder="e.g., SBIN0001234" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Local Body / LSGD Ward Name</label>
+                        <input type="text" name="lsgd_ward" class="form-control" placeholder="Ward / Panchayath Name" required>
+                    </div>
+
+                    <!-- ഡിപ്പാർട്ട്മെന്റ് അക്നോളജ്മെന്റ് റെഫറൻസ് നമ്പർ -->
+                    <div class="col-md-12 mt-3">
+                        <div class="p-3 bg-warning bg-opacity-10 rounded border border-warning">
+                            <label class="form-label fw-bold text-dark">Generated Govt Acknowledgement / Ref Number</label>
+                            <input type="text" name="govt_ref_number" class="form-control form-control-lg border-warning fw-bold" placeholder="e.g., KLA-EDIST-2026-X8910" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="{% url 'staff_counter_process' %}" class="btn btn-outline-secondary">← Back to Counter</a>
+                    <button type="submit" class="btn btn-success btn-lg fw-bold px-4">Submit to Govt Portal 🚀</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

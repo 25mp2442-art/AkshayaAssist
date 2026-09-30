@@ -346,3 +346,24 @@ def process_application(request, app_id):
             return redirect('staff_dashboard')
             
     return render(request, 'process_application.html', {'app': app})
+
+# views.py-ൽ ചേർക്കുക:
+@login_required(login_url='login')
+@user_passes_test(is_staff_user)
+def staff_govt_form_process(request, app_id):
+    app = get_object_or_404(Application.objects.prefetch_related('documents'), id=app_id)
+    
+    if request.method == 'POST':
+        # സ്റ്റാഫ് ഫിൽ ചെയ്ത ഗവൺമെന്റ് ഫോം ഡാറ്റയും റെഫറൻസ് നമ്പറും സേവ് ചെയ്യുന്നു
+        govt_ref = request.POST.get('govt_ref_number')
+        staff_remarks = request.POST.get('staff_remarks')
+        
+        app.govt_ref_number = govt_ref
+        app.staff_remarks = staff_remarks
+        app.status = 'FORWARDED_TO_GOVT'
+        app.save()
+        
+        messages.success(request, f"Application #{app.application_id} successfully submitted to Govt Portal!")
+        return redirect('staff_counter_process')
+        
+    return render(request, 'staff_govt_form.html', {'app': app})
