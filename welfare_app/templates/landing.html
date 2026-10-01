@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: white;
+        padding: 80px 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .feature-card {
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-center mb-5">
+        <h1 class="display-3 fw-bold mb-3">Smart Akshaya Welfare Portal</h1>
+        <p class="lead mb-4 text-light">Digitizing Citizen Welfare Schemes with Real-Time Queue Management & Dynamic Govt Entry</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'login' %}" class="btn btn-warning btn-lg fw-bold px-4 shadow">Citizen / Staff Login 🔐</a>
+            <a href="#features" class="btn btn-outline-light btn-lg px-4">Explore Services ↓</a>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="card h-100 p-4 feature-card bg-white rounded-3 shadow-sm">
+                <div class="fs-1 text-primary mb-3">📄</div>
+                <h5 class="fw-bold">Easy Application Submission</h5>
+                <p class="text-muted small">Apply for various state welfare schemes and upload documents seamlessly from home.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 feature-card bg-white rounded-3 shadow-sm">
+                <div class="fs-1 text-success mb-3">📲</div>
+                <h5 class="fw-bold">Live Queue Tracking</h5>
+                <p class="text-muted small">Track counter token status in real-time on your mobile without waiting in long physical queues.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 feature-card bg-white rounded-3 shadow-sm">
+                <div class="fs-1 text-warning mb-3">⚡</div>
+                <h5 class="fw-bold">Fast-Track Akshaya Processing</h5>
+                <p class="text-muted small">Staff counter integration for dynamic data collection and direct government portal submission.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -5,14 +5,24 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Max
-from django.utils import timezone  # ഫയലിന്റെ മുകളിൽ ഇത് Import ചെയ്യുക
+from django.utils import timezone
 
 from .models import UserProfile, Scheme, Application, ApplicationDocument
 
 def is_staff_user(user):
     return user.is_staff or user.is_superuser
 
-# 1. User Registration & Login Handlers
+# ----------------- PUBLIC & AUTH VIEWS -----------------
+
+# 1. Main Landing Page
+def landing_page(request):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            return redirect('staff_counter_process')
+        return redirect('home')
+    return render(request, 'landing.html')
+
+# 2. User Registration
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -25,6 +35,7 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
 
+# 3. User & Staff Login
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -34,18 +45,21 @@ def login_view(request):
             if user.is_superuser:
                 return redirect('/admin/')
             elif user.is_staff:
-                return redirect('staff_dashboard')
+                return redirect('staff_counter_process')
             else:
                 return redirect('home')
     else:
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
 
+# 4. Logout Handler
 def logout_view(request):
     auth_logout(request)
-    return redirect('login')
+    return redirect('landing_page')
 
-# 2. Profile Setup
+# ----------------- CITIZEN WORKFLOW VIEWS -----------------
+
+# 5. Citizen Profile Setup
 @login_required(login_url='login')
 def profile_setup(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -72,7 +86,7 @@ def profile_setup(request):
         return redirect('home')
     return render(request, 'profile_setup.html', {'profile': profile})
 
-# 3. User Home Screen (Filtering Scheme Eligibility)
+# 6. Citizen Home Screen (Eligible Schemes Filter)
 @login_required(login_url='login')
 def home(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -121,7 +135,7 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
-# 4. User Submits Scheme Application
+# 7. Apply Scheme Handler
 @login_required(login_url='login')
 def apply_scheme(request, scheme_id):
     scheme = get_object_or_404(Scheme, id=scheme_id)
@@ -167,9 +181,7 @@ def apply_scheme(request, scheme_id):
     }
     return render(request, 'apply_scheme.html', context)
 
-# 5. User Applications List
-import datetime
-
+# 8. User Applications List
 @login_required(login_url='login')
 def my_applications(request):
     applications = Application.objects.filter(user=request.user).order_by('-applied_date')
@@ -179,8 +191,8 @@ def my_applications(request):
         'applications': applications,
         'today': today
     })
-  
-# 6. User Re-uploads Documents
+
+# 9. Document Re-upload
 @login_required(login_url='login')
 def reupload_docs(request, app_id):
     app = get_object_or_404(Application, id=app_id, user=request.user)
@@ -201,12 +213,11 @@ def reupload_docs(request, app_id):
             return redirect('my_applications')
     return render(request, 'reupload_docs.html', {'app': app})
 
-# 7. User Selects Date & Books Token
+# 10. Book Token Slot
 @login_required(login_url='login')
 def book_token(request, app_id):
     app = get_object_or_404(Application, id=app_id, user=request.user)
     
-    # അക്ഷയ സ്റ്റാഫ് അപ്രൂവ് ചെയ്താൽ മാത്രം ടോക്കൺ ബുക്ക് ചെയ്യാൻ അനുവദിക്കുന്നു
     if app.status != 'DOCS_APPROVED':
         messages.error(request, "Documents must be approved by staff before booking a token.")
         return redirect('my_applications')
@@ -227,7 +238,7 @@ def book_token(request, app_id):
 
     return render(request, 'book_token.html', {'app': app})
 
-# 8. User Tracks Live Counter Status
+# 11. Live Queue Tracking
 @login_required(login_url='login')
 def live_queue(request, app_id):
     user_app = get_object_or_404(Application, id=app_id, user=request.user)
@@ -254,9 +265,9 @@ def live_queue(request, app_id):
     }
     return render(request, 'live_queue.html', context)
 
-# ----------------- STAFF VIEWS -----------------
+# ----------------- AKSHAYA STAFF VIEWS -----------------
 
-# 9. Akshaya Staff Dashboard
+# 12. Staff Dashboard
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def staff_dashboard(request):
@@ -267,7 +278,7 @@ def staff_dashboard(request):
         'selected_status': status_filter
     })
 
-# 10. Staff Document Verification Page
+# 13. Staff Verify Documents
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def staff_verify_docs(request, app_id):
@@ -289,7 +300,7 @@ def staff_verify_docs(request, app_id):
 
     return render(request, 'staff_verify_docs.html', {'app': app})
 
-# 11. Staff Counter Management
+# 14. Live Counter Processing
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def staff_counter_process(request):
@@ -304,7 +315,7 @@ def staff_counter_process(request):
             next_app = waiting_apps.first()
             if next_app:
                 if current_app:
-                    current_app.status = 'FORWARDED_TO_GOVT' # previous token state update
+                    current_app.status = 'FORWARDED_TO_GOVT'
                     current_app.save()
                 next_app.status = 'IN_PROGRESS'
                 next_app.save()
@@ -313,11 +324,20 @@ def staff_counter_process(request):
         elif action == 'forward_to_govt':
             app_id = request.POST.get('app_id')
             app = get_object_or_404(Application, id=app_id)
-            app.govt_ref_number = request.POST.get('govt_ref_number')
-            app.staff_remarks = request.POST.get('staff_remarks')
+            
+            govt_ref = request.POST.get('govt_ref_number')
+            remarks = request.POST.get('staff_remarks', '')
+            bank = request.POST.get('bank_account', '')
+            ifsc = request.POST.get('ifsc_code', '')
+            ward = request.POST.get('lsgd_ward', '')
+            v_status = request.POST.get('verification_status', '')
+
+            app.govt_ref_number = govt_ref
+            app.staff_remarks = f"[{v_status}] Bank: {bank}, IFSC: {ifsc}, LSGD: {ward}. Notes: {remarks}"
             app.status = 'FORWARDED_TO_GOVT'
             app.save()
-            messages.success(request, f"Application {app.application_id} forwarded to Government Portal.")
+            
+            messages.success(request, f"Application #{app.application_id} forwarded to Government Portal.")
             return redirect('staff_counter_process')
 
     return render(request, 'staff_counter.html', {
@@ -325,7 +345,7 @@ def staff_counter_process(request):
         'current_app': current_app
     })
 
-# 12. Process Individual Application
+# 15. Process Application (Individual)
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def process_application(request, app_id):
@@ -347,16 +367,15 @@ def process_application(request, app_id):
             
     return render(request, 'process_application.html', {'app': app})
 
-# views.py-ൽ ചേർക്കുക:
+# 16. Dedicated Dynamic Govt Form Processing View
 @login_required(login_url='login')
 @user_passes_test(is_staff_user)
 def staff_govt_form_process(request, app_id):
-    app = get_object_or_404(Application.objects.prefetch_related('documents'), id=app_id)
+    app = get_object_or_404(Application, id=app_id)
     
     if request.method == 'POST':
-        # സ്റ്റാഫ് ഫിൽ ചെയ്ത ഗവൺമെന്റ് ഫോം ഡാറ്റയും റെഫറൻസ് നമ്പറും സേവ് ചെയ്യുന്നു
         govt_ref = request.POST.get('govt_ref_number')
-        staff_remarks = request.POST.get('staff_remarks')
+        staff_remarks = request.POST.get('staff_remarks', '')
         
         app.govt_ref_number = govt_ref
         app.staff_remarks = staff_remarks

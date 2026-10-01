@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 mb-5">
     <h3 class="fw-bold mb-4">Akshaya Staff Counter Dashboard</h3>
     
     <div class="row">
-        <!-- Live Counter Control & Processing Panel -->
-        <div class="col-md-5">
+        <!-- Live Counter Control & Data Entry Panel -->
+        <div class="col-md-6">
             <div class="card shadow-sm border-0 p-3 mb-3 bg-white rounded">
                 <h4 class="fw-bold text-primary mb-3">Live Counter Action</h4>
                 <form method="POST">
@@ -20,25 +20,59 @@
 
             {% if current_app %}
             <div class="card shadow-sm border-0 p-4 bg-light border-start border-4 border-success rounded">
-                <small class="text-muted text-uppercase fw-bold d-block mb-1">Now Serving</small>
-                <h1 class="display-3 text-success fw-bold mb-2">#{{ current_app.token_number }}</h1>
-                <p class="mb-1"><strong>Applicant:</strong> {{ current_app.user.username }}</p>
-                <p class="mb-1"><strong>App ID:</strong> {{ current_app.application_id }}</p>
-                <p class="mb-3"><strong>Scheme:</strong> {{ current_app.scheme.title }}</p>
-                <hr>
-                <form method="POST">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="text-muted text-uppercase fw-bold">Now Serving</small>
+                    <span class="badge bg-success fs-6">Token #{{ current_app.token_number }}</span>
+                </div>
+                <h2 class="text-dark fw-bold mb-1">{{ current_app.user.username }}</h2>
+                <p class="text-muted mb-2">App ID: <code>{{ current_app.application_id }}</code></p>
+                <div class="p-2 bg-white rounded border mb-3">
+                    <strong class="text-primary">Selected Scheme:</strong> {{ current_app.scheme.title }}
+                </div>
+
+                <!-- ഫോർവേഡ് ചെയ്യുന്നതിന് മുൻപ് കൂടുതൽ ഡാറ്റ വാങ്ങാനുള്ള ഗവൺമെന്റ് ഫോം -->
+                <form method="POST" class="mt-3">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="forward_to_govt">
                     <input type="hidden" name="app_id" value="{{ current_app.id }}">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small">Govt Ack / Ref No.</label>
-                        <input type="text" name="govt_ref_number" class="form-control" placeholder="Enter Reference Number" required>
+
+                    <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">📋 Government Official Data Entry</h6>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Verification Status</label>
+                            <select name="verification_status" class="form-select form-select-sm" required>
+                                <option value="VERIFIED_DIRECT">Directly Verified at Counter</option>
+                                <option value="VERIFIED_PHONE">Verified via Phone Call</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Local Body / LSGD Ward</label>
+                            <input type="text" name="lsgd_ward" class="form-control form-control-sm" placeholder="e.g. Ward 5, Panchayath" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">DBT Bank Account No.</label>
+                            <input type="text" name="bank_account" class="form-control form-control-sm" placeholder="Enter Bank Account" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">IFSC Code</label>
+                            <input type="text" name="ifsc_code" class="form-control form-control-sm" placeholder="e.g. SBIN0001234" required>
+                        </div>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-danger">Govt Ack / Ref No. *</label>
+                        <input type="text" name="govt_ref_number" class="form-control border-danger" placeholder="Enter Govt Reference Number" required>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Staff Remarks</label>
-                        <textarea name="staff_remarks" class="form-control" rows="2" placeholder="Optional remarks"></textarea>
+                        <textarea name="staff_remarks" class="form-control" rows="2" placeholder="Citizen call updates or remarks..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success w-100 fw-bold py-2">Forward to Govt & Complete</button>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm">
+                        Forward Application to Govt Portal 🚀
+                    </button>
                 </form>
             </div>
             {% else %}
@@ -49,7 +83,7 @@
         </div>
 
         <!-- Waiting Queue List -->
-        <div class="col-md-7">
+        <div class="col-md-6">
             <div class="card shadow-sm border-0 p-3 bg-white rounded">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0">Today's Waiting Queue</h5>
